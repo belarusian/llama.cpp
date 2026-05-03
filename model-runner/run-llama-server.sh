@@ -92,13 +92,13 @@ resolve_alias_extra() {
             echo "--embedding -np 2 -c 262144"
             ;;
   qwen3.6|qwen3.6-35b|qwen3.6:35b|qwen3.6-bf16|qwen3.6-35b-bf16|qwen3.6-coding-bf16)
-              echo "--mmproj ${MODEL_DIR}/mmproj-qwen3.6-35b.gguf -np 2 -fa on -ngl 99 --jinja -c 262144"
+              echo "--mmproj ${MODEL_DIR}/mmproj-qwen3.6-35b.gguf -np 1 -fa on -ngl 99 --jinja -c 262144"
               ;;
   qwen3.6-27b-q8|qwen3.6-27b-q8_0)
-              echo "--mmproj ${MODEL_DIR}/mmproj-qwen3.6-27b.gguf -np 2 -fa on -ngl 99 --jinja -c 262144"
+              echo "--mmproj ${MODEL_DIR}/mmproj-qwen3.6-27b.gguf -np 1 -fa on -ngl 99 --jinja -c 262144"
               ;;
         nemotron|nemotron-3)
-              echo "--mmproj ${MODEL_DIR}/mmproj-Nemotron-3-Nano-Omni-30B-A3B-Reasoning-BF16.gguf -np 2 -fa on -ngl 99 --jinja -c 262144"
+              echo "--mmproj ${MODEL_DIR}/mmproj-Nemotron-3-Nano-Omni-30B-A3B-Reasoning-BF16.gguf -np 1 -fa on -ngl 99 --jinja -c 262144"
               ;;
         *)           return 1 ;;
     esac
@@ -209,6 +209,11 @@ case "$MODEL_SPEC" in
             --host 0.0.0.0 \
             --port "$PORT" \
             $EXTRA_FLAGS
+        ;;
+    nemotron)
+        if [ "$PORT_SET" -eq 0 ]; then
+            PORT=8093
+        fi
         ;;
     gpt-oss-120b)
         echo "Using built-in llama.cpp preset: gpt-oss-120b (optimized for GPU)"
