@@ -36,7 +36,6 @@ resolve_alias() {
         qwen3.6-bf16|qwen3.6-35b-bf16|qwen3.6:35b-bf16|qwen3.6-coding-bf16) echo "${MODEL_DIR}/BF16/Qwen3.6-35B-A3B-BF16-00001-of-00002.gguf" ;;
         qwen3.6-27b-q8|qwen3.6-27b-q8_0) echo "${MODEL_DIR}/Qwen3.6-27B-Q8_0.gguf" ;;
         nemotron|nemotron-3) echo "${MODEL_DIR}/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-Q8_0.gguf" ;;
-        gemma-4-26b|gemma-4|gemma-4-26b-a4b) echo "${MODEL_DIR}/Gemma-4-26B-A4B-it/gemma-4-26B-A4B-it-UD-Q4_K_M.gguf" ;;
         *)                 return 1 ;;
     esac
 }
@@ -101,9 +100,6 @@ resolve_alias_extra() {
         nemotron|nemotron-3)
               echo "--mmproj ${MODEL_DIR}/mmproj-Nemotron-3-Nano-Omni-30B-A3B-Reasoning-BF16.gguf -np 1 -fa on -ngl 99 --jinja -c 262144"
               ;;
-        gemma-4-26b|gemma-4|gemma-4-26b-a4b)
-              echo "--mmproj ${MODEL_DIR}/mmproj-F16.gguf -np 1 -fa on -ngl 99 --jinja -c 262144"
-              ;;
         *)           return 1 ;;
     esac
 }
@@ -122,7 +118,6 @@ if [ $# -lt 1 ]; then
     echo "  qwen3.6-35b-bf16         Alias for qwen3.6 (same model)"
     echo "  qwen3.6-27b-q8           Qwen3.6-27B (Q8_0) - dense, ~27GB, text+image"
     echo "  nemotron                 NVIDIA Nemotron-3 30B-A3B (Q8_0) - text+image, ~31GB"
-    echo "  gemma-4-26b              Google Gemma 4 26B-A4B (Q4_K_M) - text+image MoE, ~17GB"
     echo "  gpt-oss-20b              GPT-OSS-20B (auto-download) - GPU optimized with -np 2"
     echo "  gpt-oss-120b             GPT-OSS-120B (auto-download) - GPU optimized with -np 2"
     echo ""
