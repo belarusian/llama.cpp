@@ -1,27 +1,40 @@
 #!/bin/bash
-# run-qwen36.sh — Simple Qwen3.6 runner with thinking/preserve-thinking controls
+# run-qwen36.sh — Qwen3.6 model runner
 #
-# Thinking modes (Qwen3.6 defaults to thinking ON):
-#   --no-thinking        disable chain-of-thought reasoning
-#   --thinking           re-enable thinking (default)
-#   --preserve-thinking  preserve reasoning from previous turns
-#   --no-preserve-thinking  don't preserve (default)
+# Qwen3.6 supports hybrid thinking modes with different settings:
 #
-# Sampling controls:
-#   --temp N    temperature (default: 1.0)
-#   --top-p N   top-p sampling (default: 0.95)
-#   --top-k N   top-k sampling (default: 20)
+#   THINKING MODE (enable_thinking: true) - Model generates reasoning before answering
+#   INSTRUCT MODE (enable_thinking: false) - Direct answer without reasoning
+#
+# For each mode, you can optimize for different tasks:
+#
+#   Thinking Mode (default):
+#     --thinking-precise  Coding tasks (temp=0.6, presence=0.0)
+#     (default)           General tasks (temp=1.0, presence=1.5)
+#
+#   Instruct Mode (non-thinking):
+#     --instruct          General tasks (temp=0.7, top_p=0.8)
+#     --reasoning         Reasoning tasks (temp=1.0, top_p=0.95)
+#
+# Additional controls:
+#   --no-thinking         Force non-thinking mode (same as --instruct)
+#   --preserve-thinking   Keep reasoning context across conversation turns
+#
+# Performance:
+#   --mtp                 Enable MTP speculative decoding (~1.5x faster)
+#                         Note: MTP doesn't support vision (--mmproj)
+#
+# Sampling:
+#   --temp N              Temperature (default: 1.0)
+#   --top-p N             Top-p sampling (default: 0.95)
+#   --top-k N             Top-k sampling (default: 20)
+#   --min-p N             Min-p sampling (default: 0.0)
 #
 # Examples:
-#   ./run-qwen36.sh                    # default: thinking ON, temp 1.0 (general tasks)
-#   ./run-qwen36.sh --no-thinking      # fast non-thinking
-#   ./run-qwen36.sh --temp 0.6         # precise coding mode (thinking + low temp)
-#   ./run-qwen36.sh --port 8090        # custom port
-#   ./run-qwen36.sh --mtp              # enable MTP (speculative decoding)
-#   ./run-qwen36.sh --mtp --temp 0.7   # MTP + non-thinking
-#   ./run-qwen36.sh --thinking-precise # thinking mode for coding (temp=0.6, presence=0.0)
-#   ./run-qwen36.sh --instruct         # non-thinking mode (temp=0.7, top_p=0.8)
-#   ./run-qwen36.sh --reasoning        # non-thinking for reasoning (temp=1.0, top_p=0.95)
+#   ./qwen36-server.sh                  # default: thinking mode, general tasks
+#   ./qwen36-server.sh --thinking-precise  # thinking + coding settings
+#   ./qwen36-server.sh --instruct       # non-thinking for general tasks
+#   ./qwen36-server.sh --mtp --instruct  # MTP + non-thinking (fastest)
 
 set -eu
 
