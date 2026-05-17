@@ -19,6 +19,10 @@
 # Additional controls:
 #   --no-thinking         Force non-thinking mode (same as --instruct)
 #   --preserve-thinking   Keep reasoning context across conversation turns
+#   --mtp                 Enable MTP speculative decoding (~1.5x faster)
+#                         Note: MTP doesn't support vision (--mmproj)
+#   --dense               Use Qwen3.6-27B (dense) instead of 35B-A3B (MoE)
+#   --moe                 Use Qwen3.6-35B-A3B (MoE) - this is the default
 #
 # Performance:
 #   --mtp                 Enable MTP speculative decoding (~1.5x faster)
@@ -45,6 +49,7 @@ export GGML_METAL_TENSOR_ENABLE=1
 # === Defaults ===
 PORT=8090
 HOST=0.0.0.0
+# Default to MOE (35B-A3B)
 MODEL="${MODEL_DIR}/BF16/Qwen3.6-35B-A3B-BF16-00001-of-00002.gguf"
 MMPROJ="${MODEL_DIR}/mmproj-qwen3.6-35b.gguf"
 
@@ -82,6 +87,8 @@ while [ $# -gt 0 ]; do
         --mmproj-path)     MMPROJ="$2"; shift 2 ;;
         --no-mmproj|--text-only) MMPROJ=""; shift ;;
         --mtp)             MTP=1; shift ;;
+        --dense)           MODEL="${MODEL_DIR}/Qwen3.6-27B-MTP-BF16/BF16/Qwen3.6-27B-BF16-00001-of-00002.gguf"; MMPROJ="${MODEL_DIR}/mmproj-qwen3.6-27b.gguf"; shift ;;
+        --moe)             MODEL="${MODEL_DIR}/BF16/Qwen3.6-35B-A3B-BF16-00001-of-00002.gguf"; MMPROJ="${MODEL_DIR}/mmproj-qwen3.6-35b.gguf"; shift ;;
         --thinking-precise) TEMP=0.6; PRESENCE=0.0; shift ;;
         --instruct)        ENABLE_THINKING=0; TEMP=0.7; TOP_P=0.8; shift ;;
         --reasoning)       ENABLE_THINKING=0; TEMP=1.0; TOP_P=0.95; shift ;;
@@ -110,6 +117,7 @@ echo "temp:   $TEMP  top_p: $TOP_P"
 echo "think:  $(if [ $ENABLE_THINKING -eq 1 ]; then echo ON; else echo OFF; fi)"
 echo "preserve: $(if [ $PRESERVE_THINKING -eq 1 ]; then echo ON; else echo OFF; fi)"
 echo "mtp:    $(if [ $MTP -eq 1 ]; then echo ON; else echo OFF; fi)"
+echo "type:   $(if [[ "$MODEL" == *"-27B-"* ]]; then echo "27B (dense)"; elif [[ "$MODEL" == *"-35B-A3B-"* ]]; then echo "35B-A3B (MoE)"; else echo "unknown"; fi)"
 echo ""
 echo "Config: $EXTRA"
 echo ""
