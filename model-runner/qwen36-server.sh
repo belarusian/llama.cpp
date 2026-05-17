@@ -13,12 +13,15 @@
 #   --top-k N   top-k sampling (default: 20)
 #
 # Examples:
-#   ./run-qwen36.sh                    # default: thinking ON, temp 1.0
+#   ./run-qwen36.sh                    # default: thinking ON, temp 1.0 (general tasks)
 #   ./run-qwen36.sh --no-thinking      # fast non-thinking
-#   ./run-qwen36.sh --temp 0.6         # precise coding mode
+#   ./run-qwen36.sh --temp 0.6         # precise coding mode (thinking + low temp)
 #   ./run-qwen36.sh --port 8090        # custom port
 #   ./run-qwen36.sh --mtp              # enable MTP (speculative decoding)
 #   ./run-qwen36.sh --mtp --temp 0.7   # MTP + non-thinking
+#   ./run-qwen36.sh --thinking-precise # thinking mode for coding (temp=0.6, presence=0.0)
+#   ./run-qwen36.sh --instruct         # non-thinking mode (temp=0.7, top_p=0.8)
+#   ./run-qwen36.sh --reasoning        # non-thinking for reasoning (temp=1.0, top_p=0.95)
 
 set -eu
 
@@ -66,6 +69,9 @@ while [ $# -gt 0 ]; do
         --mmproj-path)     MMPROJ="$2"; shift 2 ;;
         --no-mmproj|--text-only) MMPROJ=""; shift ;;
         --mtp)             MTP=1; shift ;;
+        --thinking-precise) TEMP=0.6; PRESENCE=0.0; shift ;;
+        --instruct)        ENABLE_THINKING=0; TEMP=0.7; TOP_P=0.8; shift ;;
+        --reasoning)       ENABLE_THINKING=0; TEMP=1.0; TOP_P=0.95; shift ;;
         *) echo "Unknown arg: $1"; exit 1 ;;
     esac
 done
