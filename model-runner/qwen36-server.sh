@@ -17,6 +17,8 @@
 #   ./run-qwen36.sh --no-thinking      # fast non-thinking
 #   ./run-qwen36.sh --temp 0.6         # precise coding mode
 #   ./run-qwen36.sh --port 8090        # custom port
+#   ./run-qwen36.sh --mtp              # enable MTP (speculative decoding)
+#   ./run-qwen36.sh --mtp --temp 0.7   # MTP + non-thinking
 
 set -eu
 
@@ -41,6 +43,7 @@ NGL=99
 
 ENABLE_THINKING=1
 PRESERVE_THINKING=0
+MTP=0
 
 # === Parse args ===
 while [ $# -gt 0 ]; do
@@ -62,12 +65,15 @@ while [ $# -gt 0 ]; do
         --mmproj)          MMPROJ="$2"; shift 2 ;;
         --mmproj-path)     MMPROJ="$2"; shift 2 ;;
         --no-mmproj|--text-only) MMPROJ=""; shift ;;
+        --mtp)             MTP=1; shift ;;
         *) echo "Unknown arg: $1"; exit 1 ;;
     esac
 done
 
 # === Build extra args ===
-EXTRA="-m $MODEL --mmproj $MMPROJ --jinja -c $CTX --ctx-size $CTX --top-p $TOP_P --min-p $MIN_P --temp $TEMP --presence-penalty $PRESENCE --repetition-penalty $REP_PENALTY --ngl $NGL --host $HOST --port $PORT"
+EXTRA="-m $MODEL --jinja -c $CTX --ctx-size $CTX --top-p $TOP_P --min-p $MIN_P --temp $TEMP --presence-penalty $PRESENCE --repetition-penalty $REP_PENALTY --ngl $NGL --host $HOST --port $PORT"
+[ -n "${MMPROJ}" ] && [ "${MMPROJ}" != "" ] && EXTRA+=" --mmproj $MMPROJ"
+[ "$MTP" -eq 1 ] && EXTRA+=" --spec-type draft-mtp --spec-draft-n-max 6"
 
 # === Qwen3.6 chat-template-kwargs for thinking ===
 if [ "$ENABLE_THINKING" -eq 0 ]; then
@@ -84,6 +90,7 @@ echo "port:   $PORT"
 echo "temp:   $TEMP  top_p: $TOP_P"
 echo "think:  $(if [ $ENABLE_THINKING -eq 1 ]; then echo ON; else echo OFF; fi)"
 echo "preserve: $(if [ $PRESERVE_THINKING -eq 1 ]; then echo ON; else echo OFF; fi)"
+echo "mtp:    $(if [ $MTP -eq 1 ]; then echo ON; else echo OFF; fi)"
 echo ""
 echo "Config: $EXTRA"
 echo ""
