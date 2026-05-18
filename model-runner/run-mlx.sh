@@ -165,7 +165,7 @@ if [ "$SERVER_MODE" -eq 1 ]; then
     if [ "$PORT_SET" -eq 0 ]; then
         PORT=8090
     fi
-    
+
     echo "model:  $MODEL_SPEC"
     echo "hf repo: $MODEL_ID"
     echo "port:   $PORT"
@@ -173,7 +173,7 @@ if [ "$SERVER_MODE" -eq 1 ]; then
     echo "max-tokens: $MAX_TOKENS"
     echo "mode:   server (OpenAI-compatible API)"
     echo ""
-    
+
     # Check Metal
     $PYTHON -c "
 import mlx.core as mx
@@ -182,7 +182,7 @@ if not mx.metal.is_available():
     exit(1)
 print('Metal GPU: OK')
 " 2>&1
-    
+
     echo "Downloading model $MODEL_ID (first run downloads ~38-55GB)..."
     $PYTHON -c "
 import mlx_lm
@@ -192,11 +192,11 @@ print('Model ready')
         echo "ERROR: Failed to download model" >&2
         exit 1
     }
-    
+
     echo "Starting MLX server at http://127.0.0.1:$PORT"
     echo "OpenAI endpoint: http://127.0.0.1:$PORT/v1/chat/completions"
     echo ""
-    
+
     exec $PYTHON -m mlx_lm server \
         --model "$MODEL_ID" \
         --port "$PORT" \
@@ -204,7 +204,7 @@ print('Model ready')
         --max-tokens "$MAX_TOKENS" \
         --use-default-chat-template \
         $EXTRA_FLAGS
-        
+
 elif [ "$CHAT_MODE" -eq 1 ] || [ -n "$PROMPT" ]; then
     # --- Interactive mode ------------------------------------------------------
     echo "model:  $MODEL_SPEC"
@@ -218,7 +218,7 @@ elif [ "$CHAT_MODE" -eq 1 ] || [ -n "$PROMPT" ]; then
         echo "mode:   chat (interactive)"
     fi
     echo ""
-    
+
     # Check Metal
     $PYTHON -c "
 import mlx.core as mx
@@ -227,7 +227,7 @@ if not mx.metal.is_available():
     exit(1)
 print('Metal GPU: OK')
 " 2>&1
-    
+
     echo "Downloading model $MODEL_ID (first run downloads ~38-55GB)..."
     $PYTHON -c "
 import mlx_lm
@@ -237,11 +237,11 @@ print('Model ready')
         echo "ERROR: Failed to download model" >&2
         exit 1
     }
-    
+
     # --- Create Python script for running ----------------------------------------
     run_script=$(mktemp /tmp/run-mlx-XXXXXX.py)
     trap "rm -f '$run_script'" EXIT
-    
+
     cat > "$run_script" << 'PYTHON_SCRIPT'
 import mlx_lm
 import mlx.core as mx
@@ -264,23 +264,23 @@ def main():
         messages = []
         print("Chat mode started. Type 'quit' or 'exit' to stop.")
         print("=" * 50)
-        
+
         while True:
             try:
                 user_input = input("\nYou: ").strip()
             except (EOFError, KeyboardInterrupt):
                 print("\nGoodbye!")
                 break
-            
+
             if user_input.lower() in ['quit', 'exit', 'q']:
                 print("Goodbye!")
                 break
-            
+
             if not user_input:
                 continue
-            
+
             messages.append({'role': 'user', 'content': user_input})
-            
+
             try:
                 # Apply chat template to get the prompt string
                 prompt_str = tokenizer.apply_chat_template(
@@ -288,7 +288,7 @@ def main():
                     tokenize=False,
                     add_generation_prompt=True
                 )
-                
+
                 response = mlx_lm.generate(
                     model,
                     tokenizer,
@@ -297,7 +297,7 @@ def main():
                     temp=temp,
                     verbose=False
                 )
-                
+
                 print(f"\nAssistant: {response}")
                 messages.append({'role': 'assistant', 'content': response})
             except Exception as e:
@@ -308,14 +308,14 @@ def main():
             user_prompt = prompt
         else:
             user_prompt = "Hello, how are you?"
-        
+
         messages = [{'role': 'user', 'content': user_prompt}]
         prompt_str = tokenizer.apply_chat_template(
             messages,
             tokenize=False,
             add_generation_prompt=True
         )
-        
+
         response = mlx_lm.generate(
             model,
             tokenizer,
@@ -329,7 +329,7 @@ def main():
 if __name__ == '__main__':
     main()
 PYTHON_SCRIPT
-    
+
     $PYTHON "$run_script" \
         "$MODEL_ID" \
         "$TEMP" \
@@ -344,7 +344,7 @@ else
     echo "max-tokens: $MAX_TOKENS"
     echo "mode:   single prompt"
     echo ""
-    
+
     # Check Metal
     $PYTHON -c "
 import mlx.core as mx
@@ -353,7 +353,7 @@ if not mx.metal.is_available():
     exit(1)
 print('Metal GPU: OK')
 " 2>&1
-    
+
     echo "Downloading model $MODEL_ID (first run downloads ~38-55GB)..."
     $PYTHON -c "
 import mlx_lm
@@ -363,11 +363,11 @@ print('Model ready')
         echo "ERROR: Failed to download model" >&2
         exit 1
     }
-    
+
     # --- Create Python script for running ----------------------------------------
     run_script=$(mktemp /tmp/run-mlx-XXXXXX.py)
     trap "rm -f '$run_script'" EXIT
-    
+
     cat > "$run_script" << 'PYTHON_SCRIPT'
 import mlx_lm
 import mlx.core as mx
@@ -390,23 +390,23 @@ def main():
         messages = []
         print("Chat mode started. Type 'quit' or 'exit' to stop.")
         print("=" * 50)
-        
+
         while True:
             try:
                 user_input = input("\nYou: ").strip()
             except (EOFError, KeyboardInterrupt):
                 print("\nGoodbye!")
                 break
-            
+
             if user_input.lower() in ['quit', 'exit', 'q']:
                 print("Goodbye!")
                 break
-            
+
             if not user_input:
                 continue
-            
+
             messages.append({'role': 'user', 'content': user_input})
-            
+
             try:
                 # Apply chat template to get the prompt string
                 prompt_str = tokenizer.apply_chat_template(
@@ -414,7 +414,7 @@ def main():
                     tokenize=False,
                     add_generation_prompt=True
                 )
-                
+
                 response = mlx_lm.generate(
                     model,
                     tokenizer,
@@ -423,7 +423,7 @@ def main():
                     temp=temp,
                     verbose=False
                 )
-                
+
                 print(f"\nAssistant: {response}")
                 messages.append({'role': 'assistant', 'content': response})
             except Exception as e:
@@ -434,14 +434,14 @@ def main():
             user_prompt = prompt
         else:
             user_prompt = "Hello, how are you?"
-        
+
         messages = [{'role': 'user', 'content': user_prompt}]
         prompt_str = tokenizer.apply_chat_template(
             messages,
             tokenize=False,
             add_generation_prompt=True
         )
-        
+
         response = mlx_lm.generate(
             model,
             tokenizer,
@@ -455,7 +455,7 @@ def main():
 if __name__ == '__main__':
     main()
 PYTHON_SCRIPT
-    
+
     $PYTHON "$run_script" \
         "$MODEL_ID" \
         "$TEMP" \

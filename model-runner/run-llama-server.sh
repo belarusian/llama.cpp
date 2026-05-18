@@ -42,7 +42,7 @@ resolve_alias() {
 
 resolve_model() {
     spec="$1"
-    
+
     # 1. Direct path to a .gguf file
     case "$spec" in
         *.gguf)
@@ -54,7 +54,7 @@ resolve_model() {
             return
             ;;
     esac
-    
+
     # 2. Known alias
     resolved=$(resolve_alias "$spec" 2>/dev/null) && {
         if [ -f "$resolved" ]; then
@@ -65,7 +65,7 @@ resolve_model() {
             exit 1
         fi
     }
-    
+
     # 3. Try generators script if available
     if [ -f "$GENERATORS_DIR/llamacpp-run.sh" ]; then
         resolved=$(bash -c "
@@ -77,7 +77,7 @@ resolve_model() {
             return
         fi
     fi
-    
+
     echo "ERROR: Cannot resolve model: $spec" >&2
     echo "Tried: direct path, known aliases, and generators script" >&2
     exit 1
@@ -235,7 +235,7 @@ case "$MODEL_SPEC" in
         echo ""
         echo "config: $EXTRA_FLAGS"
         echo ""
-        
+
         exec "$LLAMA_SERVER" \
             -m "$MODEL_PATH" \
             --host 0.0.0.0 \
