@@ -2,7 +2,7 @@
 # qwen3-coder-next-server.sh — Qwen3-Coder-Next MoE server runner
 #
 # Qwen3-Coder-Next (80B MoE, ~3B active params) — optimized coder model.
-# Runs on bartowski Q8_0 quant from ~/models/bartowski/qwen3-coder-next-q8/
+# Runs on bartowski Q4_K_M quant from ~/models/bartowski/qwen3-coder-next-q4/
 #
 # 4 Thinking Modes (configured via --reasoning on/off):
 #   --thinking          | ON  | temp=1.0, top_p=0.95, presence=1.5  — General chatty
@@ -28,8 +28,8 @@ MODEL_DIR="${MODEL_DIR:-$HOME/models/bartowski}"
 LLAMA_SERVER="${LLAMA_SERVER:-/Users/kodep/Code/llama.cpp/build/bin/llama-server}"
 export GGML_METAL_TENSOR_ENABLE=1
 
-# Model path — sharded Q8_0 (3 files, first shard referenced)
-MODEL="${MODEL_DIR}/qwen3-coder-next-q8/Qwen_Qwen3-Coder-Next-Q8_0/Qwen_Qwen3-Coder-Next-Q8_0-00001-of-00003.gguf"
+# Model path — single Q4_K_M file
+MODEL="${MODEL_DIR}/qwen3-coder-next-q4/Qwen_Qwen3-Coder-Next-Q4_K_M/Qwen_Qwen3-Coder-Next-Q4_K_M.gguf"
 
 TEMP=1.0
 TOP_P=0.95
