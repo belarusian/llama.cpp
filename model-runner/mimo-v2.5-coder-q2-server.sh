@@ -47,7 +47,7 @@ while [ $# -gt 0 ]; do
         --ctx-size|-c)         CTX="$2"; shift 2 ;;
         --port)                PORT="$2"; shift 2 ;;
         --host)                HOST="$2"; shift 2 ;;
-        --gpu-layers/-n gl)    GPU_LAYERS="$2"; shift 2 ;;
+        --gpu-layers|-ngl)     GPU_LAYERS="$2"; shift 2 ;;
         --cache-k)             CACHE_K="$2"; shift 2 ;;
         --cache-v)             CACHE_V="$2"; shift 2 ;;
         --cpu-moe)             CPU_MOE=1; shift ;;
