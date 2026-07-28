@@ -12,7 +12,7 @@ LLAMA_SERVER="${LLAMA_SERVER:-/Users/kodep/Code/llama.cpp/build/bin/llama-server
 export GGML_METAL_TENSOR_ENABLE=1
 
 # === Defaults ===
-MODEL="${MODEL_DIR}/model.safetensors.index.json"
+MODEL="${MODEL_DIR}/Qwen-AgentWorld-35B-A3B-BF16-00001-of-00002.gguf"
 PORT="${PORT:-8086}"
 HOST="${HOST:-0.0.0.0}"
 
