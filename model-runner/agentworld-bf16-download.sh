@@ -1,44 +1,33 @@
 #!/bin/bash
 # agentworld-bf16-download.sh — Download Qwen-AgentWorld-35B-A3B BF16 weights
 # Total: ~69.3 GB, 21 shards + tokenizer files.
+# Requires: hf CLI (huggingface_hub), logged in via `hf login`
 #
 
 set -eu
 
 MODEL_DIR="${MODEL_DIR:-$HOME/models/agentworld-bf16}"
-mkdir -p "$MODEL_DIR"
-cd "$MODEL_DIR"
 
-echo "Downloading Qwen-AgentWorld-35B-A3B BF16 to $MODEL_DIR (~69 GB)"
+echo "Downloading Qwen-AgentWorld-35B-A3B BF16 (~69 GB)"
 echo ""
 
-BASE="https://huggingface.co/Qwen/Qwen-AgentWorld-35B-A3B/resolve/main"
+# Download full model to HF cache (handles auth, resume, and integrity)
+hf download Qwen/Qwen-AgentWorld-35B-A3B 2>&1
 
-# Download config files first (small, fast)
-for f in \
-  "config.json" \
-  \
-  "merges.txt" \
-  "model.safetensors.index.json" \
-  "preprocessor_config.json" \
-  "tokenizer.json" \
-  "tokenizer_config.json" \
-  "vocab.json" \
-  "video_preprocessor_config.json"; do
-  echo "[config] $f"
-  curl -sL -C - "$BASE/$f" -o "$f"
-done
+# Copy to target directory (HF uses symlinks to blobs, we hardlink instead)
+mkdir -p "$MODEL_DIR"
+HF_CACHE=$(python3 -c "from huggingface_hub import snapshot_download; print(snapshot_download('Qwen/Qwen-AgentWorld-35B-A3B'))")
 
-# Download model shards sequentially with resume support
-for i in $(seq -w 1 21); do
-  shard="model-${i}-of-00021.safetensors"
-  echo "[$(printf '%02d' $((10#$i)))/21] $shard"
-  curl -L -C - --progress-bar "$BASE/$shard" -o "$shard"
+echo ""
+echo "Copying to $MODEL_DIR ..."
+for f in "$HF_CACHE"/*; do
+  bn=$(basename "$f")
+  [ -e "$MODEL_DIR/$bn" ] && continue
+  ln "$f" "$MODEL_DIR/$bn"
 done
 
 echo ""
 echo "Done! Files:"
 ls -lh "$MODEL_DIR/" | tail -5
-echo ""
 TOTAL=$(du -sh "$MODEL_DIR" | cut -f1)
 echo "Total size: $TOTAL"
