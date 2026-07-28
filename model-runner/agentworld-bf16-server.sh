@@ -13,7 +13,7 @@ export GGML_METAL_TENSOR_ENABLE=1
 
 # === Defaults ===
 MODEL="${MODEL_DIR}/Qwen-AgentWorld-35B-A3B-BF16-00001-of-00002.gguf"
-PORT="${PORT:-8086}"
+PORT="${PORT:-8084}"
 HOST="${HOST:-0.0.0.0}"
 
 TEMP=0.6
