@@ -51,7 +51,7 @@ $modelVariants = @{
         revision  = "latest"
         modelFile = "*UD-Q4_K_XL*"
     }
-    "26b-a4b" = @{
+    '26b-a4b' = @{
         repo      = "unsloth--gemma-4-26B-A4B-it-qat-GGUF"
         revision  = "latest"
         modelFile = "*UD-Q4_K_XL*"
