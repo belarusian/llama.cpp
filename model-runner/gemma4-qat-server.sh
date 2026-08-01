@@ -1,14 +1,10 @@
 #!/bin/bash
 # gemma4-qat-server.sh — Gemma 4 QAT model runner
 #
-# Gemma 4 QAT models from Unsloth, including E2B, E4B, 12B, 26B-A4B, and 31B variants.
-# These are Quantization-Aware Training models optimized for local execution.
+# Gemma 4 QAT 31B model from Unsloth.
+# This is a Quantization-Aware Training model optimized for local execution.
 #
-# Models:
-#   e2b:    ~2 GB  (smallest variant)
-#   e4b:    ~4 GB  (default, good balance of quality/speed)
-#   12b:    ~12 GB (medium variant)
-#   26b-a4b:~26 GB (large variant)
+# Model:
 #   31b:    ~31 GB (largest variant)
 #
 # Additional Controls:
@@ -34,17 +30,8 @@ LLAMA_SERVER="${LLAMA_SERVER:-/Users/kodep/Code/llama.cpp/build/bin/llama-server
 export GGML_METAL_TENSOR_ENABLE=1
 export LLAMA_CACHE="unsloth"
 
-# === Defaults — change model variant here ===
-VARIANT="${VARIANT:-e4b}"
-
-case "$VARIANT" in
-    e2b)      MODEL="unsloth/gemma-4-E2B-it-GGUF:UD-Q4_K_XL" ;;
-    e4b)      MODEL="unsloth/gemma-4-E4B-it-qat-GGUF:UD-Q4_K_XL" ;;
-    12b)      MODEL="unsloth/gemma-4-12B-it-qat-GGUF:UD-Q4_K_XL" ;;
-    26b-a4b)  MODEL="unsloth/gemma-4-26B-A4B-it-qat-GGUF:UD-Q4_K_XL" ;;
-    31b)      MODEL="unsloth/gemma-4-31B-it-qat-GGUF:UD-Q4_K_XL" ;;
-    *)        echo "ERROR: Unknown variant '$VARIANT'. Use e2b, e4b, 12b, 26b-a4b, or 31b." >&2; exit 1 ;;
-esac
+# Model for 31b variant
+MODEL="unsloth/gemma-4-31B-it-qat-GGUF:UD-Q4_K_XL"
 
 TEMP=1.0
 TOP_P=0.95
@@ -69,16 +56,6 @@ while [ $# -gt 0 ]; do
         --host)                HOST="$2"; shift 2 ;;
         --no-mmproj|--text-only) MMPROJ=""; shift ;;
         --mmproj-path)         MMPROJ="$2"; shift 2 ;;
-        --variant|-v)          VARIANT="$2"
-            case "$VARIANT" in
-                e2b)      MODEL="unsloth/gemma-4-E2B-it-GGUF:UD-Q4_K_XL" ;;
-                e4b)      MODEL="unsloth/gemma-4-E4B-it-qat-GGUF:UD-Q4_K_XL" ;;
-                12b)      MODEL="unsloth/gemma-4-12B-it-qat-GGUF:UD-Q4_K_XL" ;;
-                26b-a4b)  MODEL="unsloth/gemma-4-26B-A4B-it-qat-GGUF:UD-Q4_K_XL" ;;
-                31b)      MODEL="unsloth/gemma-4-31B-it-qat-GGUF:UD-Q4_K_XL" ;;
-                *)        echo "ERROR: Unknown variant '$VARIANT'. Use e2b, e4b, 12b, 26b-a4b, or 31b." >&2; exit 1 ;;
-            esac
-            shift 2 ;;
         --)                    shift; CUSTOM_EXTRA="$*"; break ;;
         *) echo "Unknown arg: $1"; exit 1 ;;
     esac
