@@ -23,15 +23,13 @@ if is_xet_available():
     print("This will likely cause downloads to stall. Continuing anyway...", file=sys.stderr)
 
 quant = sys.argv[1].lower() if len(sys.argv) > 1 else "e4b"
-repo = "unsloth/gemma-4-qat"
-base = Path.home() / "models" / "gemma4-qat"
 
 configs = {
-    "e2b":      {"target": "gemma4-qat-e2b",     "file": "gemma-4-qat-e2b.gguf"},
-    "e4b":      {"target": "gemma4-qat-e4b",     "file": "gemma-4-qat-e4b.gguf"},
-    "12b":      {"target": "gemma4-qat-12b",     "file": "gemma-4-qat-12b.gguf"},
-    "26b-a4b":  {"target": "gemma4-qat-26b-a4b", "file": "gemma-4-qat-26b-a4b.gguf"},
-    "31b":      {"target": "gemma4-qat-31b",     "file": "gemma-4-qat-31b.gguf"},
+    "e2b":      {"repo": "unsloth/gemma-4-E2B-it-GGUF", "include": "*UD-Q4_K_XL*", "target": "gemma4-qat-e2b"},
+    "e4b":      {"repo": "unsloth/gemma-4-E4B-it-qat-GGUF", "include": "*UD-Q4_K_XL*", "target": "gemma4-qat-e4b"},
+    "12b":      {"repo": "unsloth/gemma-4-12B-it-qat-GGUF", "include": "*UD-Q4_K_XL*", "target": "gemma4-qat-12b"},
+    "26b-a4b":  {"repo": "unsloth/gemma-4-26B-A4B-it-qat-GGUF", "include": "*UD-Q4_K_XL*", "target": "gemma4-qat-26b-a4b"},
+    "31b":      {"repo": "unsloth/gemma-4-31B-it-qat-GGUF", "include": "*UD-Q4_K_XL*", "target": "gemma4-qat-31b"},
 }
 
 if quant not in configs:
@@ -39,6 +37,7 @@ if quant not in configs:
     sys.exit(1)
 
 cfg = configs[quant]
+base = Path.home() / "models" / "gemma4-qat"
 target = base / cfg["target"]
 
 # Check already done - count actual GGUF files, not cache
@@ -62,13 +61,18 @@ if current_gguf_count > 0 and current_gguf_count < expected_count:
         shutil.rmtree(cache_dir)
         print(f"Cleaned partial cache at {cache_dir} (will resume)")
 
-fname = cfg["file"]
-print(f"\n{fname}")
-hf_hub_download(
-    repo_id=repo,
-    filename=fname,
-    local_dir=str(target),
-)
+print(f"\nDownloading from {cfg['repo']} with include pattern {cfg['include']}")
+# Use huggingface-cli download for filtered downloads
+import subprocess
+result = subprocess.run([
+    "huggingface-cli", "download", cfg["repo"],
+    "--include", cfg["include"],
+    "--local-dir", str(target)
+], capture_output=True, text=True)
+
+if result.returncode != 0:
+    print(f"Error downloading model: {result.stderr}", file=sys.stderr)
+    sys.exit(1)
 
 # Clean up cache after successful download
 cache_dir = target / ".cache"
