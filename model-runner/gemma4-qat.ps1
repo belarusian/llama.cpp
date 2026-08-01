@@ -76,19 +76,36 @@ for ($i = 0; $i -lt $args.Count; $i++) {
     }
 }
 
+# Get the HuggingFace cache directory
 $HF_CACHE = Join-Path $env:USERPROFILE ".cache\huggingface\hub"
-$MODEL_DIR = Join-Path $HF_CACHE "models--$($variantInfo.repo)\snapshots\$($variantInfo.revision)"
+
+# The actual model directory structure in HuggingFace cache
+# For unsloth/gemma-4-31B-it-qat-GGUF, the repo name in cache is unsloth--gemma-4-31B-it-qat-GGUF
+$MODEL_REPO_DIR = Join-Path $HF_CACHE "models--unsloth--gemma-4-31B-it-qat-GGUF"
+$MODEL_SNAPSHOTS_DIR = Join-Path $MODEL_REPO_DIR "snapshots"
+
+# Find the latest snapshot directory
+$MODEL_DIR = $null
+if (Test-Path $MODEL_SNAPSHOTS_DIR) {
+    $snapshotDirs = Get-ChildItem -Path $MODEL_SNAPSHOTS_DIR -Directory
+    if ($snapshotDirs.Count -gt 0) {
+        # Get the latest snapshot by modification time
+        $MODEL_DIR = ($snapshotDirs | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName
+    }
+}
 
 # For HuggingFace models with wildcards, we need to find the actual file
 $MODEL = $null
-if ($variantInfo.modelFile -like "*UD-Q4_K_XL*") {
-    # Look for files matching the pattern
-    $foundFiles = Get-ChildItem -Path $MODEL_DIR -Filter "*.gguf" -Recurse | Where-Object { $_.Name -like "*UD-Q4_K_XL*" } | Select-Object -First 1
-    if ($foundFiles) {
-        $MODEL = $foundFiles.FullName
+if ($MODEL_DIR -and (Test-Path $MODEL_DIR)) {
+    if ($variantInfo.modelFile -like "*UD-Q4_K_XL*") {
+        # Look for files matching the pattern
+        $foundFiles = Get-ChildItem -Path $MODEL_DIR -Filter "*.gguf" -Recurse | Where-Object { $_.Name -like "*UD-Q4_K_XL*" } | Select-Object -First 1
+        if ($foundFiles) {
+            $MODEL = $foundFiles.FullName
+        }
+    } else {
+        $MODEL = Join-Path $MODEL_DIR $variantInfo.modelFile
     }
-} else {
-    $MODEL = Join-Path $MODEL_DIR $variantInfo.modelFile
 }
 
 # Resolve mmproj: explicit override > default location
