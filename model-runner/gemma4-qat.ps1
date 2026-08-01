@@ -51,16 +51,19 @@ $modelVariants = @{
         revision  = "latest"
         modelFile = "*UD-Q4_K_XL*"
     }
-    '26b-a4b' = @{
+}
+
+# Add the 26b-a4b variant separately to avoid PowerShell parsing issues
+$modelVariants["26b-a4b"] = @{
         repo      = "unsloth--gemma-4-26B-A4B-it-qat-GGUF"
         revision  = "latest"
         modelFile = "*UD-Q4_K_XL*"
-    }
-    31b = @{
+}
+
+$modelVariants["31b"] = @{
         repo      = "unsloth--gemma-4-31B-it-qat-GGUF"
         revision  = "latest"
         modelFile = "*UD-Q4_K_XL*"
-    }
 }
 
 # Defaults
