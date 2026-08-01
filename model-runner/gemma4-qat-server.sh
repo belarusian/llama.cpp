@@ -20,7 +20,7 @@
 # Sampling:
 #   --temp N              Temperature (default: 1.0)
 #   --top-p N             Top-p sampling (default: 0.95)
-#   --top-k N             Top-k sampling (default: 20)
+#   --top-k N             Top-k sampling (default: 64)
 #   --min-p N             Min-p sampling (default: 0.0)
 #
 # Vision / Multimodal:
@@ -32,22 +32,23 @@ set -eu
 MODEL_DIR="${MODEL_DIR:-$HOME/models/gemma4-qat}"
 LLAMA_SERVER="${LLAMA_SERVER:-/Users/kodep/Code/llama.cpp/build/bin/llama-server}"
 export GGML_METAL_TENSOR_ENABLE=1
+export LLAMA_CACHE="unsloth"
 
 # === Defaults — change model variant here ===
 VARIANT="${VARIANT:-e4b}"
 
 case "$VARIANT" in
-    e2b)      MODEL="${MODEL_DIR}/gemma4-qat-e2b/gemma-4-qat-e2b.gguf" ;;
-    e4b)      MODEL="${MODEL_DIR}/gemma4-qat-e4b/gemma-4-qat-e4b.gguf" ;;
-    12b)      MODEL="${MODEL_DIR}/gemma4-qat-12b/gemma-4-qat-12b.gguf" ;;
-    26b-a4b)  MODEL="${MODEL_DIR}/gemma4-qat-26b-a4b/gemma-4-qat-26b-a4b.gguf" ;;
-    31b)      MODEL="${MODEL_DIR}/gemma4-qat-31b/gemma-4-qat-31b.gguf" ;;
+    e2b)      MODEL="unsloth/gemma-4-E2B-it-GGUF:UD-Q4_K_XL" ;;
+    e4b)      MODEL="unsloth/gemma-4-E4B-it-qat-GGUF:UD-Q4_K_XL" ;;
+    12b)      MODEL="unsloth/gemma-4-12B-it-qat-GGUF:UD-Q4_K_XL" ;;
+    26b-a4b)  MODEL="unsloth/gemma-4-26B-A4B-it-qat-GGUF:UD-Q4_K_XL" ;;
+    31b)      MODEL="unsloth/gemma-4-31B-it-qat-GGUF:UD-Q4_K_XL" ;;
     *)        echo "ERROR: Unknown variant '$VARIANT'. Use e2b, e4b, 12b, 26b-a4b, or 31b." >&2; exit 1 ;;
 esac
 
 TEMP=1.0
 TOP_P=0.95
-TOP_K=20
+TOP_K=64
 MIN_P=0.0
 CTX=262103
 REASONING_BUDGET=-1
@@ -70,11 +71,11 @@ while [ $# -gt 0 ]; do
         --mmproj-path)         MMPROJ="$2"; shift 2 ;;
         --variant|-v)          VARIANT="$2"
             case "$VARIANT" in
-                e2b)      MODEL="${MODEL_DIR}/gemma4-qat-e2b/gemma-4-qat-e2b.gguf" ;;
-                e4b)      MODEL="${MODEL_DIR}/gemma4-qat-e4b/gemma-4-qat-e4b.gguf" ;;
-                12b)      MODEL="${MODEL_DIR}/gemma4-qat-12b/gemma-4-qat-12b.gguf" ;;
-                26b-a4b)  MODEL="${MODEL_DIR}/gemma4-qat-26b-a4b/gemma-4-qat-26b-a4b.gguf" ;;
-                31b)      MODEL="${MODEL_DIR}/gemma4-qat-31b/gemma-4-qat-31b.gguf" ;;
+                e2b)      MODEL="unsloth/gemma-4-E2B-it-GGUF:UD-Q4_K_XL" ;;
+                e4b)      MODEL="unsloth/gemma-4-E4B-it-qat-GGUF:UD-Q4_K_XL" ;;
+                12b)      MODEL="unsloth/gemma-4-12B-it-qat-GGUF:UD-Q4_K_XL" ;;
+                26b-a4b)  MODEL="unsloth/gemma-4-26B-A4B-it-qat-GGUF:UD-Q4_K_XL" ;;
+                31b)      MODEL="unsloth/gemma-4-31B-it-qat-GGUF:UD-Q4_K_XL" ;;
                 *)        echo "ERROR: Unknown variant '$VARIANT'. Use e2b, e4b, 12b, 26b-a4b, or 31b." >&2; exit 1 ;;
             esac
             shift 2 ;;
@@ -103,7 +104,7 @@ EXTRA+=" --reasoning-budget $REASONING_BUDGET"
 echo "=== Gemma 4 QAT Runner ==="
 echo "model:  $MODEL"
 echo "port:   $PORT"
-echo "temp:   $TEMP  top_p: $TOP_P"
+echo "temp:   $TEMP  top_p: $TOP_P  top_k: $TOP_K"
 echo "think:  $(if [ $ENABLE_THINKING -eq 1 ]; then echo ON; else echo OFF; fi)"
 echo "budget: $REASONING_BUDGET tokens (0=skip, >N=max, -1=unlimited)"
 echo ""
