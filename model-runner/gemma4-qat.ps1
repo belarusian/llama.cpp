@@ -1,10 +1,6 @@
 # gemma4-qat.ps1 - Gemma 4 QAT model runner (Windows) with vision support
 #
 # Models:
-#   e2b:    ~2 GB  (smallest variant)
-#   e4b:    ~4 GB  (default, good balance of quality/speed)
-#   12b:    ~12 GB (medium variant)
-#   26b-a4b:~26 GB (large variant)
 #   31b:    ~31 GB (largest variant)
 #
 # Additional Controls:
@@ -26,7 +22,7 @@
 #   --text-only           Disable vision
 #
 # Additional controls:
-#   --ctx-size N          Context size (default: 262103)
+#   --ctx-size N          Context size (default: 262144)
 #   --port N              Server port (default: 8082)
 
 $ErrorActionPreference = "Stop"
@@ -34,36 +30,11 @@ $ErrorActionPreference = "Stop"
 $SCRIPT_DIR = Split-Path -Parent $MyInvocation.MyCommand.Path
 $LLAMA_SERVER = Join-Path $env:USERPROFILE "llama.cpp\build\bin\Release\llama-server.exe"
 
-# Model definitions per variant
-$modelVariants = @{
-    e2b = @{
-        repo      = "unsloth--gemma-4-E2B-it-GGUF"
-        revision  = "latest"
-        modelFile = "*UD-Q4_K_XL*"
-    }
-    e4b = @{
-        repo      = "unsloth--gemma-4-E4B-it-qat-GGUF"
-        revision  = "latest"
-        modelFile = "*UD-Q4_K_XL*"
-    }
-    12b = @{
-        repo      = "unsloth--gemma-4-12B-it-qat-GGUF"
-        revision  = "latest"
-        modelFile = "*UD-Q4_K_XL*"
-    }
-}
-
-# Add the 26b-a4b variant separately to avoid PowerShell parsing issues
-$modelVariants["26b-a4b"] = @{
-        repo      = "unsloth--gemma-4-26B-A4B-it-qat-GGUF"
-        revision  = "latest"
-        modelFile = "*UD-Q4_K_XL*"
-}
-
-$modelVariants["31b"] = @{
-        repo      = "unsloth--gemma-4-31B-it-qat-GGUF"
-        revision  = "latest"
-        modelFile = "*UD-Q4_K_XL*"
+# Model definitions for 31b variant
+$variantInfo = @{
+    repo      = "unsloth--gemma-4-31B-it-qat-GGUF"
+    revision  = "latest"
+    modelFile = "*UD-Q4_K_XL*"
 }
 
 # Defaults
@@ -77,7 +48,6 @@ $Ctx = 262144
 $ReasoningBudget = -1
 $EnableThinking = $false
 $EnableVision = $false
-$Variant = "e4b"
 $visionFlag = $false
 
 # Parse args
@@ -100,21 +70,12 @@ for ($i = 0; $i -lt $args.Count; $i++) {
         "--vision" { $EnableVision = $true; $visionFlag = $true }
         "--no-mmproj" { $EnableVision = $false }
         "--text-only" { $EnableVision = $false }
-        "--variant" { $i++; $Variant = $args[$i] }
-        "-v" { $i++; $Variant = $args[$i] }
 
         "--" { $i++; $params = $args[$i..($args.Count-1)] -join " "; break }
         default { Write-Error "Unknown arg: $($args[$i])"; exit 1 }
     }
 }
 
-# Resolve model path from selected variant
-if (-not $modelVariants.ContainsKey($Variant)) {
-    Write-Error "Unknown variant: $Variant. Available: $($modelVariants.Keys -join ', ')"
-    exit 1
-}
-
-$variantInfo = $modelVariants[$Variant]
 $HF_CACHE = Join-Path $env:USERPROFILE ".cache\huggingface\hub"
 $MODEL_DIR = Join-Path $HF_CACHE "models--$($variantInfo.repo)\snapshots\$($variantInfo.revision)"
 
@@ -167,7 +128,7 @@ if (-not (Test-Path $MODEL)) {
     Write-Host "Model not found: $MODEL" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "Download with:" -ForegroundColor Yellow
-    Write-Host "  ./model-runner/download-gemma4-qat.sh $Variant" -ForegroundColor Yellow
+    Write-Host "  .\model-runner\download-gemma4-qat.ps1 -Variant 31b" -ForegroundColor Yellow
     Write-Host ""
     exit 1
 }
@@ -210,7 +171,6 @@ $visionStr = if ($EnableVision -and (Test-Path $MMPROJ)) { "ON" } else { "OFF" }
 
 Write-Host ""
 Write-Host "=== Gemma 4 QAT Runner ===" -ForegroundColor Cyan
-Write-Host "variant:  $Variant"
 Write-Host "model:    $MODEL"
 Write-Host "mmproj:   $(if ($EnableVision -and (Test-Path $MMPROJ)) { $MMPROJ } else { 'none' })"
 Write-Host "port:     $Port"
