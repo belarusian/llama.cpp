@@ -16,9 +16,9 @@ LLAMA_SERVER="${LLAMA_SERVER:-/Users/kodep/Code/llama.cpp/build/bin/llama-server
 export GGML_METAL_TENSOR_ENABLE=1
 
 # === Defaults ===
-PORT=8082
+PORT=8080
 HOST=0.0.0.0
-QUANT="UD-Q4_K_XL"
+QUANT="Q8_XL"
 MTP_ENABLED=1
 SPEC_N_MAX=2
 
@@ -26,12 +26,10 @@ USE_CASE="" # "coding" or "agentic"
 
 # Model paths resolved from QUANT
 case "$QUANT" in
-    UD-Q4_K_XL) MODEL="${MODEL_DIR}/Qwen3.6-27B-MTP-GGUF/Qwen3.6-27B-UD-Q4_K_XL.gguf" ;;
-    Q4_K_M)     MODEL="${MODEL_DIR}/Qwen3.6-27B-MTP-GGUF/Qwen3.6-27B-Q4_K_M.gguf" ;;
     Q8_0)       MODEL="${MODEL_DIR}/Qwen3.6-27B-MTP-GGUF/Qwen3.6-27B-Q8_0.gguf" ;;
-    UD-Q8_K_XL) MODEL="${MODEL_DIR}/Qwen3.6-27B-MTP-GGUF/Qwen3.6-27B-UD-Q8_K_XL.gguf" ;;
+    Q8_XL)      MODEL="${MODEL_DIR}/Qwen3.6-27B-MTP-GGUF/Qwen3.6-27B-UD-Q8_K_XL.gguf" ;;
     BF16)       MODEL="${MODEL_DIR}/Qwen3.6-27B-MTP-GGUF/BF16/Qwen3.6-27B-BF16-00001-of-00002.gguf" ;;
-    *)          echo "ERROR: Unknown quant '$QUANT'. Use UD-Q4_K_XL, Q4_K_M, Q8_0, UD-Q8_K_XL, or BF16." >&2; exit 1 ;;
+    *)          echo "ERROR: Unknown quant '$QUANT'. Use Q8_0, Q8_XL, or BF16." >&2; exit 1 ;;
 esac
 MMPROJ="${MODEL_DIR}/Qwen3.6-27B-MTP-GGUF/mmproj-F16.gguf"
 
@@ -72,12 +70,10 @@ while [ $# -gt 0 ]; do
         --no-mmproj|--text-only) MMPROJ=""; shift ;;
         --quant|-q)             QUANT="$2"
                                 case "$QUANT" in
-                                    UD-Q4_K_XL) MODEL="${MODEL_DIR}/Qwen3.6-27B-MTP-GGUF/Qwen3.6-27B-UD-Q4_K_XL.gguf" ;;
-                                    Q4_K_M)     MODEL="${MODEL_DIR}/Qwen3.6-27B-MTP-GGUF/Qwen3.6-27B-Q4_K_M.gguf" ;;
                                     Q8_0)       MODEL="${MODEL_DIR}/Qwen3.6-27B-MTP-GGUF/Qwen3.6-27B-Q8_0.gguf" ;;
-                                    UD-Q8_K_XL) MODEL="${MODEL_DIR}/Qwen3.6-27B-MTP-GGUF/Qwen3.6-27B-UD-Q8_K_XL.gguf" ;;
+                                    Q8_XL)      MODEL="${MODEL_DIR}/Qwen3.6-27B-MTP-GGUF/Qwen3.6-27B-UD-Q8_K_XL.gguf" ;;
                                     BF16)       MODEL="${MODEL_DIR}/Qwen3.6-27B-MTP-GGUF/BF16/Qwen3.6-27B-BF16-00001-of-00002.gguf" ;;
-                                    *)          echo "ERROR: Unknown quant '$QUANT'. Use UD-Q4_K_XL, Q4_K_M, Q8_0, UD-Q8_K_XL, or BF16." >&2; exit 1 ;;
+                                    *)          echo "ERROR: Unknown quant '$QUANT'. Use Q8_0, Q8_XL, or BF16." >&2; exit 1 ;;
                                 esac
                                 shift 2 ;;
         --mtp|--enable-mtp)     MTP_ENABLED=1; shift ;;
