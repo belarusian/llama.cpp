@@ -19,7 +19,9 @@
 #      are preserved for backward compatibility.
 #
 # Qwen3-Coder-Next (80B MoE, ~3B active params) — optimized coder model.
-# Runs on bartowski Q4_K_M quant from ~/models/bartowski/qwen3-coder-next-q4/
+# Two quantizations available (default: q4):
+#   --quant q4   bartowski Q4_K_M  — ~49GB, single file, faster
+#   --quant q8   original Q8_0     — ~76GB, 4 shards, higher quality
 #
 # 6 Modes:
 #   --coding            | ON  | temp=0.6, top_p=0.95, presence=0.0   — Precise coding (thinking ON)
@@ -30,6 +32,7 @@
 #   --reasoning         | OFF | temp=1.0, top_p=0.95, presence=0.0   — Reasoning tasks (direct output)
 #
 # Additional Controls:
+# --quant q4|q8               Quantization (default: q4)
 # --reasoning-budget N        Cap max tokens for thinking
 #   (0 = skip thinking, >N = cap at N, -1 = unlimited)
 # --thinking|--think          Enable thinking mode (default when not in instruct/reasoning mode)
@@ -43,12 +46,15 @@
 
 set -eu
 
-MODEL_DIR="${MODEL_DIR:-$HOME/models/bartowski}"
+MODEL_DIR="${MODEL_DIR:-$HOME/models}"
 LLAMA_SERVER="${LLAMA_SERVER:-/Users/kodep/Code/llama.cpp/build/bin/llama-server}"
 export GGML_METAL_TENSOR_ENABLE=1
 
-# Model path — single Q4_K_M file
-MODEL="${MODEL_DIR}/qwen3-coder-next-q4/Qwen_Qwen3-Coder-Next-Q4_K_M/Qwen_Qwen3-Coder-Next-Q4_K_M.gguf"
+# Quantization (default: q4)
+QUANT="q4"
+
+# Model paths — resolved after arg parsing
+MODEL=""
 
 TEMP=1.0
 TOP_P=0.95
@@ -74,6 +80,7 @@ while [ $# -gt 0 ]; do
         --ctx-size|-c)         CTX="$2"; shift 2 ;;
         --port)                PORT="$2"; shift 2 ;;
         --host)                HOST="$2"; shift 2 ;;
+        --quant|-q)            QUANT="$2"; shift 2 ;;
         --coding)              USE_CASE="coding"; ENABLE_THINKING=1; TEMP=0.6; TOP_P=0.95; PRESENCE=0.0; shift ;;
         --agentic)             USE_CASE="agentic"; ENABLE_THINKING=0; TEMP=0.7; TOP_P=0.8; PRESENCE=1.5; shift ;;
         --thinking-precise)    USE_CASE="coding"; ENABLE_THINKING=1; TEMP=0.6; PRESENCE=0.0; shift ;;
@@ -83,6 +90,13 @@ while [ $# -gt 0 ]; do
         *) echo "Unknown arg: $1"; exit 1 ;;
     esac
 done
+
+# === Resolve model path ===
+case "$QUANT" in
+    q4) MODEL="${MODEL_DIR}/bartowski/qwen3-coder-next-q4/Qwen_Qwen3-Coder-Next-Q4_K_M/Qwen_Qwen3-Coder-Next-Q4_K_M.gguf" ;;
+    q8) MODEL="${MODEL_DIR}/Qwen3-Coder-Next-Q8_0/Qwen3-Coder-Next-Q8_0/Qwen3-Coder-Next-Q8_0-00001-of-00004.gguf" ;;
+    *)  echo "ERROR: Unknown quantization '$QUANT' (use q4 or q8)"; exit 1 ;;
+esac
 
 # === Build extra args ===
 PORT="${PORT:-8082}"
@@ -103,6 +117,7 @@ EXTRA+=" --reasoning-budget $REASONING_BUDGET"
 # === Print config ===
 echo "=== Qwen3-Coder-Next MoE Runner v2 ==="
 echo "use-case: ${USE_CASE:-default}"
+echo "quant:    $QUANT"
 echo "model:    $MODEL"
 echo "port:     $PORT"
 echo "temp:     $TEMP  top_p: $TOP_P  presence: $PRESENCE"
