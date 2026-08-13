@@ -5,9 +5,16 @@
 # Vision (mmproj) enabled by default, disable with --no-mmproj.
 # Thinking mode enabled by default.
 #
+# Thinking levels (via --think-level N):
+#   0  : off (no thinking)
+#   1  : low
+#   2  : medium (default for --coding)
+#   3  : high
+#   4  : xhigh
+#
 # Use Cases:
 #   --coding   : Thinking mode, precise coding tasks
-#                temp=0.6, top_p=0.95, top_k=64, min_p=0.0, presence_penalty=0.0
+#                temp=1.0, top_p=0.95, top_k=64, min_p=0.0, presence_penalty=0.0
 #   --agentic  : Non-thinking mode (instruct), tool-calling/agentic work
 #                temp=0.7, top_p=0.8, top_k=64, min_p=0.0, presence_penalty=1.5
 
@@ -47,25 +54,26 @@ TOP_K=64
 MIN_P=0.0
 PRESENCE=0.0
 CTX=131072
-ENABLE_THINKING=1
+THINK_LEVEL=2
 
 # === Parse args ===
 while [ $# -gt 0 ]; do
     case "$1" in
         --coding)
             USE_CASE="coding"
-            ENABLE_THINKING=1
-            TEMP=0.6
+            THINK_LEVEL=2
+            TEMP=1.0
             TOP_P=0.95
             PRESENCE=0.0
             shift ;;
         --agentic)
             USE_CASE="agentic"
-            ENABLE_THINKING=0
+            THINK_LEVEL=0
             TEMP=0.7
             TOP_P=0.8
             PRESENCE=1.5
             shift ;;
+        --think-level|-tl)        THINK_LEVEL="$2"; shift 2 ;;
         --temp|-t)              TEMP="$2"; shift 2 ;;
         --top-p)                TOP_P="$2"; shift 2 ;;
         --top-k|-k)             TOP_K="$2"; shift 2 ;;
@@ -101,8 +109,8 @@ done
 # If no use case specified, default to --coding
 if [ -z "$USE_CASE" ]; then
     USE_CASE="coding"
-    ENABLE_THINKING=1
-    TEMP=0.6
+    THINK_LEVEL=2
+    TEMP=1.0
     TOP_P=0.95
     PRESENCE=0.0
 fi
@@ -113,21 +121,26 @@ EXTRA="$BASE"
 
 [ -n "${MMPROJ}" ] && EXTRA+=" --mmproj $MMPROJ"
 
-if [ "$ENABLE_THINKING" -eq 0 ]; then
-    EXTRA+=" --reasoning off"
-fi
+case "$THINK_LEVEL" in
+    0)  EXTRA+=" --reasoning off" ;;
+    1)  EXTRA+=" --reasoning on --chat-template-kwargs '{\"reasoning_effort\": \"low\"}'" ;;
+    2)  EXTRA+=" --reasoning on --chat-template-kwargs '{\"reasoning_effort\": \"medium\"}'" ;;
+    3)  EXTRA+=" --reasoning on --chat-template-kwargs '{\"reasoning_effort\": \"high\"}'" ;;
+    4)  EXTRA+=" --reasoning on --chat-template-kwargs '{\"reasoning_effort\": \"xhigh\"}'" ;;
+    *)  echo "ERROR: Invalid think-level '$THINK_LEVEL'. Use 0-4." >&2; exit 1 ;;
+esac
 
 [ -n "${CUSTOM_EXTRA:-}" ] && EXTRA+=" $CUSTOM_EXTRA"
 
 # === Print config ===
 echo "=== Muse-Glimmer-30B Runner ==="
-echo "use-case: $USE_CASE"
-echo "model:    $MODEL"
-echo "quant:    $QUANT"
-echo "mmproj:   ${MMPROJ:-none}"
-echo "port:     $PORT"
-echo "temp:     $TEMP  top_p: $TOP_P  top_k: $TOP_K"
-echo "think:    $(if [ $ENABLE_THINKING -eq 1 ]; then echo ON; else echo OFF; fi)"
+echo "use-case:   $USE_CASE"
+echo "model:      $MODEL"
+echo "quant:      $QUANT"
+echo "mmproj:     ${MMPROJ:-none}"
+echo "port:       $PORT"
+echo "temp:       $TEMP  top_p: $TOP_P  top_k: $TOP_K"
+echo "think-level: $THINK_LEVEL (0=off, 1=low, 2=medium, 3=high, 4=xhigh)"
 
 if [ -n "${MMPROJ}" ] && [ "${MMPROJ}" != "" ]; then
     VISION_STR="ON"
