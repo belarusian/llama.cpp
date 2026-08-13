@@ -109,28 +109,26 @@ done
 # If no use case specified, default to --coding
 if [ -z "$USE_CASE" ]; then
     USE_CASE="coding"
-    THINK_LEVEL=2
     TEMP=1.0
     TOP_P=0.95
     PRESENCE=0.0
 fi
 
 # === Build args ===
-BASE="-m $MODEL --jinja -np 1 -fa on -ngl 99 -c $CTX --ctx-size $CTX --top-k $TOP_K --top-p $TOP_P --min-p $MIN_P --temp $TEMP --presence-penalty $PRESENCE --host $HOST --port $PORT"
-EXTRA="$BASE"
+ARGS=(-m "$MODEL" --jinja -np 1 -fa on -ngl 99 -c "$CTX" --ctx-size "$CTX" --top-k "$TOP_K" --top-p "$TOP_P" --min-p "$MIN_P" --temp "$TEMP" --presence-penalty "$PRESENCE" --host "$HOST" --port "$PORT")
 
-[ -n "${MMPROJ}" ] && EXTRA+=" --mmproj $MMPROJ"
+[ -n "${MMPROJ}" ] && ARGS+=(--mmproj "$MMPROJ")
 
 case "$THINK_LEVEL" in
-    0)  EXTRA+=" --reasoning off" ;;
-    1)  EXTRA+=" --reasoning on --chat-template-kwargs '{\"reasoning_effort\": \"low\"}'" ;;
-    2)  EXTRA+=" --reasoning on --chat-template-kwargs '{\"reasoning_effort\": \"medium\"}'" ;;
-    3)  EXTRA+=" --reasoning on --chat-template-kwargs '{\"reasoning_effort\": \"high\"}'" ;;
-    4)  EXTRA+=" --reasoning on --chat-template-kwargs '{\"reasoning_effort\": \"xhigh\"}'" ;;
+    0)  ARGS+=(--reasoning off) ;;
+    1)  ARGS+=(--reasoning on --chat-template-kwargs '{"reasoning_effort":"low"}') ;;
+    2)  ARGS+=(--reasoning on --chat-template-kwargs '{"reasoning_effort":"medium"}') ;;
+    3)  ARGS+=(--reasoning on --chat-template-kwargs '{"reasoning_effort":"high"}') ;;
+    4)  ARGS+=(--reasoning on --chat-template-kwargs '{"reasoning_effort":"xhigh"}') ;;
     *)  echo "ERROR: Invalid think-level '$THINK_LEVEL'. Use 0-4." >&2; exit 1 ;;
 esac
 
-[ -n "${CUSTOM_EXTRA:-}" ] && EXTRA+=" $CUSTOM_EXTRA"
+[ -n "${CUSTOM_EXTRA:-}" ] && eval ARGS+=($CUSTOM_EXTRA)
 
 # === Print config ===
 echo "=== Muse-Glimmer-30B Runner ==="
@@ -151,7 +149,7 @@ echo "vision:   $VISION_STR"
 echo "presence: $PRESENCE"
 echo ""
 [ ! -f "$MODEL" ] && echo "WARNING: Model file not found at $MODEL" >&2
-echo "Config: $EXTRA"
+echo "Config: ${ARGS[*]}"
 echo ""
 
-exec "$LLAMA_SERVER" $EXTRA
+exec "$LLAMA_SERVER" "${ARGS[@]}"
