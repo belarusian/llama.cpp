@@ -1,6 +1,6 @@
 #!/bin/bash
 # Download Muse-Glimmer-30B quantized variants from Unsloth
-# Usage: ./download-muse-glimmer-30b.sh [q4|q8|ud8|bf16|mmproj|all]  (default: q8)
+# Usage: ./download-muse-glimmer-30b.sh [q4|q8|ud8|bf16|mmproj|dflash|all]  (default: q8)
 set -eu
 
 export HF_HUB_DISABLE_XET=1
@@ -33,11 +33,12 @@ configs = {
                     "mmproj-Muse-Glimmer-30B-Q8_0.gguf",
                     "mmproj-Muse-Glimmer-30B-BF16.gguf",
                 ]},
+    "dflash": {"target": "Muse-Glimmer-30B-GGUF", "file": "dflash-kquant.gguf"},
     "all":    None,
 }
 
 if quant not in configs:
-    print(f"Usage: {sys.argv[0]} [q4|q8|ud8|ud6|ud5|ud3|ud2|bf16|mmproj|all]", file=sys.stderr)
+    print(f"Usage: {sys.argv[0]} [q4|q8|ud8|ud6|ud5|ud3|ud2|bf16|mmproj|dflash|all]", file=sys.stderr)
     sys.exit(1)
 
 if quant == "all":
@@ -60,6 +61,7 @@ sizes = {
     "q4":   "~17 GB", "q8":   "~30 GB", "ud8":  "~30 GB",
     "ud6":  "~22 GB", "ud5":  "~19 GB", "ud3":  "~14 GB",
     "ud2":  "~12 GB", "bf16": "~58 GB (2 shards)", "mmproj": "~1.8 GB (2 files)",
+    "dflash": "~1.2 GB",
 }
 print(f"=== Downloading Muse-Glimmer-30B {quant} ({sizes.get(quant, '?')}) ===")
 print(f"Target: {target}")

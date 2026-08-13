@@ -4,6 +4,7 @@
 # Meta's 30B dense vision model, Unsloth dynamic quants.
 # Vision (mmproj) enabled by default, disable with --no-mmproj.
 # Thinking mode enabled by default.
+# DFlash speculative decoding optional (requires dflash-kquant.gguf).
 #
 # Thinking levels (via --think-level N):
 #   0  : off (no thinking)
@@ -48,6 +49,9 @@ case "$QUANT" in
     *)        MMPROJ="${MODEL_DIR}/Muse-Glimmer-30B-GGUF/mmproj-Muse-Glimmer-30B-BF16.gguf" ;;
 esac
 
+DFLASH=""
+DFLASH_ENABLED=0
+
 TEMP=1.0
 TOP_P=0.95
 TOP_K=64
@@ -84,6 +88,9 @@ while [ $# -gt 0 ]; do
         --host)                 HOST="$2"; shift 2 ;;
         --mmproj-path)          MMPROJ="$2"; shift 2 ;;
         --no-mmproj|--text-only) MMPROJ=""; shift ;;
+        --dflash)               DFLASH_ENABLED=1; shift ;;
+        --dflash-path)          DFLASH="$2"; DFLASH_ENABLED=1; shift 2 ;;
+        --no-dflash)            DFLASH_ENABLED=0; shift ;;
         --quant|-q)             QUANT="$2"
                                 case "$QUANT" in
                                     Q8_0)           MODEL="${MODEL_DIR}/Muse-Glimmer-30B-GGUF/Muse-Glimmer-30B-Q8_0.gguf" ;;
@@ -119,6 +126,13 @@ ARGS=(-m "$MODEL" --jinja -np 1 -fa on -ngl 99 -c "$CTX" --ctx-size "$CTX" --top
 
 [ -n "${MMPROJ}" ] && ARGS+=(--mmproj "$MMPROJ")
 
+if [ "$DFLASH_ENABLED" -eq 1 ]; then
+    if [ -z "$DFLASH" ]; then
+        DFLASH="${MODEL_DIR}/Muse-Glimmer-30B-GGUF/dflash-kquant.gguf"
+    fi
+    ARGS+=(--spec-type draft-dflash --spec-draft-n-max 2 --spec-draft-model "$DFLASH")
+fi
+
 case "$THINK_LEVEL" in
     0)  ARGS+=(--reasoning off) ;;
     1)  ARGS+=(--reasoning on --chat-template-kwargs '{"reasoning_effort":"low"}') ;;
@@ -146,6 +160,13 @@ else
     VISION_STR="OFF"
 fi
 echo "vision:   $VISION_STR"
+
+if [ "$DFLASH_ENABLED" -eq 1 ]; then
+    DFLASH_STR="ON ($DFLASH)"
+else
+    DFLASH_STR="OFF"
+fi
+echo "dflash:   $DFLASH_STR"
 echo "presence: $PRESENCE"
 echo ""
 [ ! -f "$MODEL" ] && echo "WARNING: Model file not found at $MODEL" >&2
