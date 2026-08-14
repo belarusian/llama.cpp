@@ -145,6 +145,10 @@ if (-not $UseCase) {
     $Presence = 0.0
 }
 
+$chatKwargsLow = [ordered]@{ reasoning_effort = "low" } | ConvertTo-Json -Compress
+$chatKwargsMedium = [ordered]@{ reasoning_effort = "medium" } | ConvertTo-Json -Compress
+$chatKwargsXhigh = [ordered]@{ reasoning_effort = "xhigh" } | ConvertTo-Json -Compress
+
 if (-not (Test-Path $MODEL)) {
     Write-Host ""
     Write-Host "Model not found: $MODEL" -ForegroundColor Yellow
@@ -180,11 +184,11 @@ if ($EnableVision -and (Test-Path $MMPROJ)) {
 if (-not $EnableThinking) {
     $serverArgs += @("--reasoning", "off")
 } elseif ($ThinkLevel -eq 1) {
-    $serverArgs += @("--reasoning", "on", "--chat-template-kwargs", '{"reasoning_effort":"low"}')
+    $serverArgs += @("--reasoning", "on", "--chat-template-kwargs", $chatKwargsLow)
 } elseif ($ThinkLevel -eq 2) {
-    $serverArgs += @("--reasoning", "on", "--chat-template-kwargs", '{"reasoning_effort":"medium"}')
+    $serverArgs += @("--reasoning", "on", "--chat-template-kwargs", $chatKwargsMedium)
 } elseif ($ThinkLevel -eq 3) {
-    $serverArgs += @("--reasoning", "on", "--chat-template-kwargs", '{"reasoning_effort":"xhigh"}')
+    $serverArgs += @("--reasoning", "on", "--chat-template-kwargs", $chatKwargsXhigh)
 }
 
 $serverArgs += @("--reasoning-budget", "$ReasoningBudget")
