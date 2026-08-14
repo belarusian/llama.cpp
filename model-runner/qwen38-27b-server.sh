@@ -4,6 +4,7 @@
 # Alibaba's 27B dense model, Unsloth dynamic quants.
 # Vision (mmproj) enabled by default, disable with --no-mmproj.
 # Thinking mode enabled by default.
+# MTP speculative decoding enabled by default: --spec-type draft-mtp --spec-draft-n-max 2
 #
 # Based on Unsloth best practices:
 #   Thinking: temp=1.0, top_p=0.95, top_k=20, min_p=0.0, presence=0.0, repeat=1.0
@@ -25,6 +26,8 @@ export GGML_METAL_TENSOR_ENABLE=1
 PORT=8080
 HOST=0.0.0.0
 QUANT="UD-Q8_K_XL"
+MTP_ENABLED=1
+SPEC_N_MAX=2
 
 USE_CASE="" # "coding" or "agentic"
 
@@ -85,6 +88,9 @@ while [ $# -gt 0 ]; do
         --host)                 HOST="$2"; shift 2 ;;
         --mmproj-path)          MMPROJ="$2"; shift 2 ;;
         --no-mmproj|--text-only) MMPROJ=""; shift ;;
+        --mtp|--enable-mtp)     MTP_ENABLED=1; shift ;;
+        --no-mtp)               MTP_ENABLED=0; shift ;;
+        --spec-n-max|-sn)       SPEC_N_MAX="$2"; shift 2 ;;
         --quant|-q)             QUANT="$2"
                                 case "$QUANT" in
                                     UD-Q8_K_XL)   MODEL="${MODEL_DIR}/Qwen3.8-27B-GGUF/Qwen3.8-27B-UD-Q8_K_XL.gguf" ;;
@@ -125,6 +131,10 @@ fi
 
 EXTRA+=" --reasoning-budget $REASONING_BUDGET"
 
+if [ "$MTP_ENABLED" -eq 1 ]; then
+    EXTRA+=" --spec-type draft-mtp --spec-draft-n-max $SPEC_N_MAX"
+fi
+
 [ -n "${CUSTOM_EXTRA:-}" ] && EXTRA+=" $CUSTOM_EXTRA"
 
 # === Print config ===
@@ -137,6 +147,13 @@ echo "port:     $PORT"
 echo "temp:     $TEMP  top_p: $TOP_P  top_k: $TOP_K"
 echo "think:    $(if [ $ENABLE_THINKING -eq 1 ]; then echo ON; else echo OFF; fi)"
 echo "budget:   $REASONING_BUDGET tokens (0=skip, >N=max, -1=unlimited)"
+
+if [ "$MTP_ENABLED" -eq 1 ]; then
+    MTP_STR="ON (n_max=$SPEC_N_MAX)"
+else
+    MTP_STR="OFF"
+fi
+echo "mtp:      $MTP_STR"
 
 if [ -n "${MMPROJ}" ] && [ "${MMPROJ}" != "" ]; then
     VISION_STR="ON"

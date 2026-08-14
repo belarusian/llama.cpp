@@ -48,12 +48,13 @@ if quant == "all":
 cfg = configs[quant]
 target = base / cfg["target"]
 
-current_gguf_count = len(list(target.glob("*.gguf")))
-expected_count = len(cfg.get("files", []))
-if expected_count == 0:
-    expected_count = 1
+files = cfg.get("files", None)
+if files is None:
+    files = [cfg["file"]]
 
-if current_gguf_count >= expected_count:
+# Check if the specific file(s) already exist
+missing = [f for f in files if not (target / f).exists()]
+if not missing:
     print(f"[SKIP] Qwen3.8-27B {quant} already at {target}")
     sys.exit(0)
 
@@ -66,17 +67,6 @@ sizes = {
 print(f"=== Downloading Qwen3.8-27B {quant} ({sizes.get(quant, '?')}) ===")
 print(f"Target: {target}")
 target.mkdir(parents=True, exist_ok=True)
-
-if current_gguf_count > 0 and current_gguf_count < expected_count:
-    cache_dir = target / ".cache"
-    if cache_dir.exists():
-        import shutil
-        shutil.rmtree(cache_dir)
-        print(f"Cleaned partial cache at {cache_dir} (will resume)")
-
-files = cfg.get("files", None)
-if files is None:
-    files = [cfg["file"]]
 
 for i, fname in enumerate(files, 1):
     label = f"File {i}/{len(files)}: " if len(files) > 1 else ""
