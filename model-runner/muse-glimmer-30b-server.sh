@@ -51,6 +51,7 @@ esac
 
 DFLASH=""
 DFLASH_ENABLED=0
+SPEC_N_MAX=2
 
 TEMP=1.0
 TOP_P=0.95
@@ -91,6 +92,7 @@ while [ $# -gt 0 ]; do
         --dflash)               DFLASH_ENABLED=1; shift ;;
         --dflash-path)          DFLASH="$2"; DFLASH_ENABLED=1; shift 2 ;;
         --no-dflash)            DFLASH_ENABLED=0; shift ;;
+        --spec-n-max|-sn)       SPEC_N_MAX="$2"; shift 2 ;;
         --quant|-q)             QUANT="$2"
                                 case "$QUANT" in
                                     Q8_0)           MODEL="${MODEL_DIR}/Muse-Glimmer-30B-GGUF/Muse-Glimmer-30B-Q8_0.gguf" ;;
@@ -130,7 +132,7 @@ if [ "$DFLASH_ENABLED" -eq 1 ]; then
     if [ -z "$DFLASH" ]; then
         DFLASH="${MODEL_DIR}/Muse-Glimmer-30B-GGUF/dflash-kquant.gguf"
     fi
-    ARGS+=(--spec-type draft-dflash --spec-draft-n-max 2 --spec-draft-model "$DFLASH")
+    ARGS+=(--spec-type draft-dflash --spec-draft-n-max "$SPEC_N_MAX" --spec-draft-model "$DFLASH")
 fi
 
 case "$THINK_LEVEL" in
