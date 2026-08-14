@@ -145,11 +145,11 @@ EXTRA="$BASE"
 if [ "$ENABLE_THINKING" -eq 0 ]; then
     EXTRA+=" --reasoning off"
 elif [ "$THINK_LEVEL" -eq 1 ]; then
-    EXTRA+=" --reasoning on --chat-template-kwargs '{\"reasoning_effort\":\"low\"}'"
+    EXTRA+=" --reasoning on --chat-template-kwargs {\"reasoning_effort\":\"low\"}"
 elif [ "$THINK_LEVEL" -eq 2 ]; then
-    EXTRA+=" --reasoning on --chat-template-kwargs '{\"reasoning_effort\":\"medium\"}'"
+    EXTRA+=" --reasoning on --chat-template-kwargs {\"reasoning_effort\":\"medium\"}"
 elif [ "$THINK_LEVEL" -eq 3 ]; then
-    EXTRA+=" --reasoning on --chat-template-kwargs '{\"reasoning_effort\":\"xhigh\"}'"
+    EXTRA+=" --reasoning on --chat-template-kwargs {\"reasoning_effort\":\"xhigh\"}"
 fi
 
 EXTRA+=" --reasoning-budget $REASONING_BUDGET"
