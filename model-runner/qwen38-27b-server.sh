@@ -6,6 +6,12 @@
 # Thinking mode enabled by default.
 # MTP speculative decoding enabled by default: --spec-type draft-mtp --spec-draft-n-max 2
 #
+# Thinking levels (via --think-level N):
+#   0  : off (no thinking)
+#   1  : low
+#   2  : medium
+#   3  : xhigh (default for --coding)
+#
 # Based on Unsloth best practices:
 #   Thinking: temp=1.0, top_p=0.95, top_k=20, min_p=0.0, presence=0.0, repeat=1.0
 #   Instruct: temp=0.7, top_p=0.80, top_k=20, min_p=0.0, presence=1.5, repeat=1.0
@@ -15,6 +21,9 @@
 #                temp=1.0, top_p=0.95, top_k=20, min_p=0.0, presence_penalty=0.0
 #   --agentic  : Non-thinking mode (instruct), tool-calling/agentic work
 #                temp=0.7, top_p=0.80, top_k=20, min_p=0.0, presence_penalty=1.5
+#
+# Thinking depth control:
+#   --think-level 0|1|2|3   (off|low|medium|xhigh) — default 3 for --coding
 
 set -eu
 
@@ -57,6 +66,7 @@ CTX=262144
 ENABLE_THINKING=1
 REASONING_BUDGET=-1
 REASONING_PRESERVE=0
+THINK_LEVEL=3
 
 # === Parse args ===
 while [ $# -gt 0 ]; do
@@ -64,6 +74,7 @@ while [ $# -gt 0 ]; do
         --coding)
             USE_CASE="coding"
             ENABLE_THINKING=1
+            THINK_LEVEL=3
             TEMP=1.0
             TOP_P=0.95
             PRESENCE=0.0
@@ -71,12 +82,14 @@ while [ $# -gt 0 ]; do
         --agentic)
             USE_CASE="agentic"
             ENABLE_THINKING=0
+            THINK_LEVEL=0
             TEMP=0.7
             TOP_P=0.8
             PRESENCE=1.5
             shift ;;
         --no-thinking)          ENABLE_THINKING=0; shift ;;
         --thinking|--think)     ENABLE_THINKING=1; shift ;;
+        --think-level|-tl)      THINK_LEVEL="$2"; shift 2 ;;
         --reasoning-budget|-rb) REASONING_BUDGET="$2"; shift 2 ;;
         --reasoning-preserve)   REASONING_PRESERVE=1; shift ;;
         --no-reasoning-preserve) REASONING_PRESERVE=0; shift ;;
@@ -117,6 +130,7 @@ done
 if [ -z "$USE_CASE" ]; then
     USE_CASE="coding"
     ENABLE_THINKING=1
+    THINK_LEVEL=3
     TEMP=1.0
     TOP_P=0.95
     PRESENCE=0.0
@@ -130,6 +144,12 @@ EXTRA="$BASE"
 
 if [ "$ENABLE_THINKING" -eq 0 ]; then
     EXTRA+=" --reasoning off"
+elif [ "$THINK_LEVEL" -eq 1 ]; then
+    EXTRA+=" --reasoning on --chat-template-kwargs '{\"reasoning_effort\":\"low\"}'"
+elif [ "$THINK_LEVEL" -eq 2 ]; then
+    EXTRA+=" --reasoning on --chat-template-kwargs '{\"reasoning_effort\":\"medium\"}'"
+elif [ "$THINK_LEVEL" -eq 3 ]; then
+    EXTRA+=" --reasoning on --chat-template-kwargs '{\"reasoning_effort\":\"xhigh\"}'"
 fi
 
 EXTRA+=" --reasoning-budget $REASONING_BUDGET"
@@ -152,7 +172,7 @@ echo "quant:    $QUANT"
 echo "mmproj:   ${MMPROJ:-none}"
 echo "port:     $PORT"
 echo "temp:     $TEMP  top_p: $TOP_P  top_k: $TOP_K"
-echo "think:    $(if [ $ENABLE_THINKING -eq 1 ]; then echo ON; else echo OFF; fi)"
+echo "think:    $(if [ $ENABLE_THINKING -eq 1 ]; then echo ON; else echo OFF; fi) (level: $THINK_LEVEL, 0=off, 1=low, 2=medium, 3=xhigh)"
 echo "budget:   $REASONING_BUDGET tokens (0=skip, >N=max, -1=unlimited)"
 echo "preserve: $(if [ $REASONING_PRESERVE -eq 1 ]; then echo ON; else echo OFF; fi)"
 
