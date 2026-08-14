@@ -44,13 +44,14 @@ if quant not in configs:
 cfg = configs[quant]
 target = base / cfg["target"]
 
-# Check already done - count actual GGUF files, not cache
-current_gguf_count = len(list(target.glob("*.gguf")))
-expected_count = len(cfg.get("files", []))
-if expected_count == 0:
-    expected_count = 1  # single file case has 'file' key
+files = cfg.get("files", None)
+if files is None:
+    files = [cfg["file"]]
+subdir = cfg.get("subdir")
 
-if current_gguf_count == expected_count:
+# Check if the specific file(s) already exist
+missing = [f for f in files if not (target / (subdir + "/" + f if subdir else f)).exists()]
+if not missing:
     print(f"[SKIP] Qwen3.6-27B {quant} already at {target}")
     sys.exit(0)
 
@@ -58,19 +59,6 @@ sizes = {"q4": "~18 GB", "q8": "~29 GB", "bf16": "~55 GB (2 shards)", "mmproj": 
 print(f"=== Downloading Qwen3.6-27B {quant} ({sizes[quant]}) ===")
 print(f"Target: {target}")
 target.mkdir(parents=True, exist_ok=True)
-
-# Only clean if we have some GGUF files but not all (partial download)
-if current_gguf_count > 0 and current_gguf_count < expected_count:
-    cache_dir = target / ".cache"
-    if cache_dir.exists():
-        import shutil
-        shutil.rmtree(cache_dir)
-        print(f"Cleaned partial cache at {cache_dir} (will resume)")
-
-files = cfg.get("files", None)
-if files is None:
-    files = [cfg["file"]]
-subdir = cfg.get("subdir")
 
 for i, fname in enumerate(files, 1):
     label = f"Shard {i}/{len(files)}: " if len(files) > 1 else ""
@@ -81,13 +69,6 @@ for i, fname in enumerate(files, 1):
         subfolder=subdir,
         local_dir=str(target),
     )
-
-# Clean up cache after successful download
-cache_dir = target / ".cache"
-if cache_dir.exists():
-    import shutil
-    shutil.rmtree(cache_dir)
-    print(f"\nCleaned cache at {cache_dir}")
 
 print("\nDone:")
 for f in sorted(target.glob("*.gguf")):
