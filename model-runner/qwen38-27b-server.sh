@@ -56,6 +56,7 @@ REPEAT=1.0
 CTX=262144
 ENABLE_THINKING=1
 REASONING_BUDGET=-1
+REASONING_PRESERVE=0
 
 # === Parse args ===
 while [ $# -gt 0 ]; do
@@ -77,6 +78,8 @@ while [ $# -gt 0 ]; do
         --no-thinking)          ENABLE_THINKING=0; shift ;;
         --thinking|--think)     ENABLE_THINKING=1; shift ;;
         --reasoning-budget|-rb) REASONING_BUDGET="$2"; shift 2 ;;
+        --reasoning-preserve)   REASONING_PRESERVE=1; shift ;;
+        --no-reasoning-preserve) REASONING_PRESERVE=0; shift ;;
         --temp|-t)              TEMP="$2"; shift 2 ;;
         --top-p)                TOP_P="$2"; shift 2 ;;
         --top-k|-k)             TOP_K="$2"; shift 2 ;;
@@ -131,6 +134,10 @@ fi
 
 EXTRA+=" --reasoning-budget $REASONING_BUDGET"
 
+if [ "$REASONING_PRESERVE" -eq 1 ]; then
+    EXTRA+=" --reasoning-preserve"
+fi
+
 if [ "$MTP_ENABLED" -eq 1 ]; then
     EXTRA+=" --spec-type draft-mtp --spec-draft-n-max $SPEC_N_MAX"
 fi
@@ -147,6 +154,7 @@ echo "port:     $PORT"
 echo "temp:     $TEMP  top_p: $TOP_P  top_k: $TOP_K"
 echo "think:    $(if [ $ENABLE_THINKING -eq 1 ]; then echo ON; else echo OFF; fi)"
 echo "budget:   $REASONING_BUDGET tokens (0=skip, >N=max, -1=unlimited)"
+echo "preserve: $(if [ $REASONING_PRESERVE -eq 1 ]; then echo ON; else echo OFF; fi)"
 
 if [ "$MTP_ENABLED" -eq 1 ]; then
     MTP_STR="ON (n_max=$SPEC_N_MAX)"
