@@ -87,12 +87,6 @@ for i, fname in enumerate(files, 1):
         local_dir=str(target),
     )
 
-cache_dir = target / ".cache"
-if cache_dir.exists():
-    import shutil
-    shutil.rmtree(cache_dir)
-    print(f"\nCleaned cache at {cache_dir}")
-
 print("\nDone:")
 for f in sorted(target.glob("*.gguf")):
     print(f"  {f.name} ({f.stat().st_size / 1e9:.1f} GB)")
