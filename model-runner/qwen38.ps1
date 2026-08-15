@@ -8,8 +8,8 @@
 # Thinking levels (via --think-level N):
 #   0  : off (no thinking)
 #   1  : low
-#   2  : medium
-#   3  : xhigh (default for --coding)
+#   2  : medium (default for --coding)
+#   3  : xhigh
 #
 # Based on Unsloth best practices:
 #   Thinking: temp=1.0, top_p=0.95, top_k=20, min_p=0.0, presence=0.0, repeat=1.0
@@ -22,7 +22,7 @@
 #                temp=0.7, top_p=0.80, top_k=20, min_p=0.0, presence_penalty=1.5
 #
 # Thinking depth control:
-#   --think-level 0|1|2|3   (off|low|medium|xhigh) - default 3 for --coding
+#   --think-level 0|1|2|3   (off|low|medium|xhigh) - default 2 for --coding
 
 $ErrorActionPreference = "Stop"
 
@@ -43,11 +43,11 @@ $TopK = 20
 $MinP = 0.0
 $Presence = 0.0
 $Repeat = 1.0
-$Ctx = 262144
+$Ctx = 65536
 $EnableThinking = $true
 $ReasoningBudget = -1
 $ReasoningPreserve = $false
-$ThinkLevel = 3
+$ThinkLevel = 2
 $EnableVision = $true
 
 $modelMap = @{
@@ -139,7 +139,7 @@ for ($i = 0; $i -lt $args.Count; $i++) {
 if (-not $UseCase) {
     $UseCase = "coding"
     $EnableThinking = $true
-    $ThinkLevel = 3
+    $ThinkLevel = 2
     $Temp = 1.0
     $TopP = 0.95
     $Presence = 0.0
