@@ -22,7 +22,7 @@
 #                temp=0.7, top_p=0.80, top_k=20, min_p=0.0, presence_penalty=1.5
 #
 # Thinking depth control:
-#   --think-level 0|1|2|3   (off|low|medium|xhigh) — default 3 for --coding
+#   --think-level 0|1|2|3   (off|low|medium|xhigh) - default 3 for --coding
 
 $ErrorActionPreference = "Stop"
 
@@ -145,9 +145,9 @@ if (-not $UseCase) {
     $Presence = 0.0
 }
 
-$chatKwargsLow = [ordered]@{ reasoning_effort = "low" } | ConvertTo-Json -Compress
-$chatKwargsMedium = [ordered]@{ reasoning_effort = "medium" } | ConvertTo-Json -Compress
-$chatKwargsXhigh = [ordered]@{ reasoning_effort = "xhigh" } | ConvertTo-Json -Compress
+$chatKwargsLow = '{\"reasoning_effort\":\"low\"}'
+$chatKwargsMedium = '{\"reasoning_effort\":\"medium\"}'
+$chatKwargsXhigh = '{\"reasoning_effort\":\"xhigh\"}'
 
 if (-not (Test-Path $MODEL)) {
     Write-Host ""
