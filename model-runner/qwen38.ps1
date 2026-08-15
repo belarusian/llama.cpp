@@ -71,7 +71,7 @@ for ($i = 0; $i -lt $args.Count; $i++) {
         "--coding" {
             $UseCase = "coding"
             $EnableThinking = $true
-            $ThinkLevel = 3
+            $ThinkLevel = 2
             $Temp = 1.0
             $TopP = 0.95
             $Presence = 0.0
