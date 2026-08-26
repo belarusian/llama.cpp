@@ -23,6 +23,9 @@
 #
 # Thinking depth control:
 #   --think-level 0|1|2|3   (off|low|medium|xhigh) - default 2 for --coding
+#
+# Metrics:
+#   --metrics   Enable prometheus metrics endpoint (/metrics)
 
 $ErrorActionPreference = "Stop"
 
@@ -47,6 +50,7 @@ $Ctx = 65536
 $EnableThinking = $true
 $ReasoningBudget = -1
 $ReasoningPreserve = $false
+$Metrics = $false
 $ThinkLevel = 2
 $EnableVision = $true
 
@@ -107,6 +111,8 @@ for ($i = 0; $i -lt $args.Count; $i++) {
         "--host" { $i++; $ListenHost = $args[$i] }
         "--mmproj-path" { $i++; $MMPROJ = $args[$i]; $EnableVision = $true }
         "--no-mmproj" { $EnableVision = $false }
+        "--metrics" { $Metrics = $true }
+        "--no-metrics" { $Metrics = $false }
         "--text-only" { $EnableVision = $false }
         "--mtp" { $MTPEnabled = $true }
         "--enable-mtp" { $MTPEnabled = $true }
@@ -197,6 +203,10 @@ if ($ReasoningPreserve) {
     $serverArgs += "--reasoning-preserve"
 }
 
+if ($Metrics) {
+    $serverArgs += "--metrics"
+}
+
 if ($MTPEnabled) {
     $serverArgs += @("--spec-type", "draft-mtp", "--spec-draft-n-max", "$SpecNMax")
 }
@@ -209,6 +219,7 @@ $thinkStr = if ($EnableThinking) { "ON (level: $ThinkLevel, 0=off, 1=low, 2=medi
 $visionStr = if ($EnableVision -and (Test-Path $MMPROJ)) { "ON" } else { "OFF" }
 $mtpStr = if ($MTPEnabled) { "ON (n_max=$SpecNMax)" } else { "OFF" }
 $preserveStr = if ($ReasoningPreserve) { "ON" } else { "OFF" }
+$metricsStr = if ($Metrics) { "ON" } else { "OFF" }
 
 Write-Host ""
 Write-Host "=== Qwen3.8-27B Runner ===" -ForegroundColor Cyan
@@ -221,6 +232,7 @@ Write-Host "temp:     $Temp  top_p: $TopP  top_k: $TopK"
 Write-Host "think:    $thinkStr"
 Write-Host "budget:   $ReasoningBudget tokens (0=skip, >N=max, -1=unlimited)"
 Write-Host "preserve: $preserveStr"
+Write-Host "metrics:  $metricsStr"
 Write-Host "mtp:      $mtpStr"
 Write-Host "vision:   $visionStr"
 Write-Host "presence: $Presence  repeat: $Repeat"
