@@ -24,6 +24,9 @@
 #
 # Thinking depth control:
 #   --think-level 0|1|2|3   (off|low|medium|xhigh) — default 3 for --coding
+#
+# Metrics:
+#   --metrics   Enable prometheus metrics endpoint (/metrics)
 
 set -eu
 
@@ -66,6 +69,7 @@ CTX=262144
 ENABLE_THINKING=1
 REASONING_BUDGET=-1
 REASONING_PRESERVE=0
+METRICS=0
 THINK_LEVEL=3
 
 # === Parse args ===
@@ -104,6 +108,8 @@ while [ $# -gt 0 ]; do
         --host)                 HOST="$2"; shift 2 ;;
         --mmproj-path)          MMPROJ="$2"; shift 2 ;;
         --no-mmproj|--text-only) MMPROJ=""; shift ;;
+        --metrics)                METRICS=1; shift ;;
+        --no-metrics)             METRICS=0; shift ;;
         --mtp|--enable-mtp)     MTP_ENABLED=1; shift ;;
         --no-mtp)               MTP_ENABLED=0; shift ;;
         --spec-n-max|-sn)       SPEC_N_MAX="$2"; shift 2 ;;
@@ -158,6 +164,10 @@ if [ "$REASONING_PRESERVE" -eq 1 ]; then
     EXTRA+=" --reasoning-preserve"
 fi
 
+if [ "$METRICS" -eq 1 ]; then
+    EXTRA+=" --metrics"
+fi
+
 if [ "$MTP_ENABLED" -eq 1 ]; then
     EXTRA+=" --spec-type draft-mtp --spec-draft-n-max $SPEC_N_MAX"
 fi
@@ -175,6 +185,7 @@ echo "temp:     $TEMP  top_p: $TOP_P  top_k: $TOP_K"
 echo "think:    $(if [ $ENABLE_THINKING -eq 1 ]; then echo ON; else echo OFF; fi) (level: $THINK_LEVEL, 0=off, 1=low, 2=medium, 3=xhigh)"
 echo "budget:   $REASONING_BUDGET tokens (0=skip, >N=max, -1=unlimited)"
 echo "preserve: $(if [ $REASONING_PRESERVE -eq 1 ]; then echo ON; else echo OFF; fi)"
+echo "metrics:  $(if [ $METRICS -eq 1 ]; then echo ON; else echo OFF; fi)"
 
 if [ "$MTP_ENABLED" -eq 1 ]; then
     MTP_STR="ON (n_max=$SPEC_N_MAX)"
